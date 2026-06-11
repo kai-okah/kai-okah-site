@@ -23,14 +23,21 @@ export default function ProjectCard({ project }: { project: Project }) {
           </li>
         ))}
       </ul>
-      <a
-        href={project.repo}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-auto pt-2 text-sm font-medium text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-      >
-        View source <span aria-hidden="true">→</span>
-      </a>
+      {project.repo ? (
+        <a
+          href={project.repo}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-auto pt-2 text-sm font-medium text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          View source <span aria-hidden="true">→</span>
+        </a>
+      ) : (
+        // Private code (see note in projects.ts) — say so instead of 404ing.
+        <p className="mt-auto pt-2 text-sm text-muted">
+          Private build — source on request
+        </p>
+      )}
     </article>
   );
 }

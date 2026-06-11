@@ -7,44 +7,45 @@ export type Project = {
   line: string;
   description: string;
   stack: string[];
-  repo: string;
+  // Omitted = private code: the card explains instead of linking
+  // (privacy rule from the brief — job-radar knows too much about Kai).
+  repo?: string;
 };
 
 export const projects: Project[] = [
   {
-    // Privacy rule from the brief: this card links to the repo and stays
-    // generic — no screenshots, no job-hunt data anywhere on the site.
-    // TODO(kai): confirm the repo URL, description and stack, and that the
-    // repo itself is sanitized (day-1 privacy check) before launch.
+    // Privacy rule from the brief: the real repo stays private (it holds
+    // CV, applications and rankings from the actual job hunt), so this
+    // card deliberately has no repo link. Decided by Kai 2026-06-11.
     name: "job-radar",
     line: "A tool that watches the job market so I don't have to.",
     description:
-      "Keeps track of interesting postings and my own pipeline in one " +
-      "place instead of seventeen browser tabs. Built for my real job " +
-      "hunt, shared because the problem isn't unique to me.",
-    stack: ["TypeScript"],
-    repo: "https://github.com/kai-okah/job-radar",
+      "Scans postings across platforms, scores them against what I'm " +
+      "actually looking for, and tracks every application in one place " +
+      "instead of seventeen browser tabs. Built for my real job hunt — " +
+      "which is exactly why the code stays private: it knows too much " +
+      "about me.",
+    stack: ["Python", "LLM pipeline"],
   },
   {
-    // TODO(kai): replace with a real repo — you owe the engineer the list
-    // of 2–3 projects to feature (BRIEF day-1 deliverable).
-    name: "second-project",
-    line: "Placeholder — Kai picks the featured repos during PR review.",
+    name: "E-Commerce System in C",
+    line: "An online store that runs entirely in the terminal.",
     description:
-      "This card shows the layout with three projects. Swap in a real " +
-      "repository by editing src/data/projects.ts.",
-    stack: ["TODO"],
-    repo: "https://github.com/kai-okah",
+      "Final project for Harvard's CS50x: user accounts, product " +
+      "browsing, cart, checkout with loyalty points — written in C with " +
+      "file-based persistence and a video demo in the README.",
+    stack: ["C"],
+    repo: "https://github.com/kai-okah/cs50xProject",
   },
   {
-    // TODO(kai): replace with a real repo, or delete — the grid looks
-    // right with two cards as well.
-    name: "third-project",
-    line: "Placeholder — see the note on second-project.",
+    name: "dsa-course-2026",
+    line: "Making algorithms prove they work.",
     description:
-      "Same as above: replace or remove this entry in " +
-      "src/data/projects.ts before launch.",
-    stack: ["TODO"],
-    repo: "https://github.com/kai-okah",
+      "Companion repo to my data-structures course: implementations " +
+      "ship with test runners that print the condition, expected vs. " +
+      "actual, and pass/fail — so edge cases in binary search, stacks, " +
+      "queues and union-find have nowhere to hide.",
+    stack: ["Python"],
+    repo: "https://github.com/kai-okah/dsa-course-2026",
   },
 ];
