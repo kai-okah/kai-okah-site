@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { profile } from "@/data/profile";
 import "./globals.css";
 
 // Self-hosted at build time by next/font — zero external requests at runtime.
@@ -9,9 +10,29 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const description =
+  "Software engineering student at the University of Duisburg-Essen. " +
+  "Small, honest tools with public source — and an open inbox.";
+
+// Icons and the Open Graph image are wired automatically from the files
+// next to this one (icon.svg, favicon.ico, apple-icon.png,
+// opengraph-image.png) — App Router file conventions.
 export const metadata: Metadata = {
-  title: "Kai Okah",
-  description: "Personal site of Kai Okah, software engineering student.",
+  metadataBase: new URL(profile.siteUrl),
+  title: {
+    default: `${profile.brand} — Software Engineering Student`,
+    template: `%s · ${profile.brand}`,
+  },
+  description,
+  openGraph: {
+    title: profile.brand,
+    description,
+    url: "/",
+    siteName: profile.brand,
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 // Runs before first paint so the page never flashes the wrong theme:
