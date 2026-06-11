@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Design tokens — the single source of the site's look (BRIEF §design).
+   Light ("paper white") is the default; [data-theme="dark"] ("near black")
+   flips every variable. One warm accent (amber/copper), tuned per theme
+   so it always meets WCAG AA contrast.
+--------------------------------------------------------------------------- */
+:root {
+  --bg: #faf9f7;
+  --fg: #1a1916;
+  --muted: #6f6a60;
+  --accent: #b45309;
+  --card: #ffffff;
+  --line: #e7e4dd;
+}
+
+[data-theme="dark"] {
+  --bg: #0d0c0a;
+  --fg: #ece9e2;
+  --muted: #9b968a;
+  --accent: #f59e0b;
+  --card: #161512;
+  --line: #28261f;
+}
+
+/* Map the variables into Tailwind utilities: bg-bg, text-fg, text-muted,
+   text-accent, bg-card, border-line — plus font-sans / font-mono from
+   the next/font variables set in layout.tsx. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-card: var(--card);
+  --color-line: var(--line);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* ---------------------------------------------------------------------------
+   Reveal-on-scroll: elements start slightly lowered and transparent;
+   .is-visible (added by the useReveal hook) brings them in. Pure CSS
+   transitions — no animation library (BRIEF dependency budget).
+--------------------------------------------------------------------------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Accessibility: visitors who prefer reduced motion get a fully visible,
+   non-animating page. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
