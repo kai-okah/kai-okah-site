@@ -1,22 +1,25 @@
-import ThemeToggle from "@/components/ThemeToggle";
+import Nav from "@/components/Nav";
+import Hero from "@/components/Hero";
 
-// Temporary token demo — replaced by the real sections in the next commits.
+// The whole site is this one page: hero → projects → about → contact
+// (BRIEF R13). Sections below the hero are filled in by their own
+// components as they land.
 export default function Home() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-6 px-6">
-      <div className="flex items-center justify-between">
-        <span className="font-mono text-sm text-muted">design tokens</span>
-        <ThemeToggle />
-      </div>
-      <h1 className="text-4xl font-semibold tracking-tight">Kai Okah</h1>
-      <p className="text-lg text-muted">
-        Near-black / paper-white themes, one warm{" "}
-        <span className="text-accent">amber accent</span>, Geist Sans +{" "}
-        <span className="font-mono">Geist Mono</span>.
-      </p>
-      <div className="rounded-lg border border-line bg-card p-4 text-sm">
-        Card surface on subtle border.
-      </div>
-    </main>
+    <>
+      <Nav />
+      <main>
+        <Hero />
+        <section id="projects" className="mx-auto max-w-5xl px-6 py-24">
+          <h2 className="text-2xl font-semibold tracking-tight">Projects</h2>
+        </section>
+        <section id="about" className="mx-auto max-w-5xl px-6 py-24">
+          <h2 className="text-2xl font-semibold tracking-tight">About</h2>
+        </section>
+        <section id="contact" className="mx-auto max-w-5xl px-6 py-24">
+          <h2 className="text-2xl font-semibold tracking-tight">Contact</h2>
+        </section>
+      </main>
+    </>
   );
 }
