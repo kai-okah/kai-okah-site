@@ -210,10 +210,21 @@ export default function CameraRig() {
     v.desiredPos.set(...base.pos);
     v.desiredTar.set(...base.tar);
 
-    // Tall viewports need more distance to fit the same shot (the
-    // aspect-compensation trick from Henry's MonitorKeyframe).
+    // Tall (portrait) viewports: a fixed vertical FOV makes the
+    // horizontal FOV collapse on phones — widen the lens as the screen
+    // narrows, and pull the shot back a little besides (the
+    // aspect-compensation idea from Henry's MonitorKeyframe).
     const aspect = size.height / size.width;
-    if (aspect > 1 && (mode === "monitor" || mode === "dossier" || mode === "corkboard")) {
+    const cam = camera as THREE.PerspectiveCamera;
+    const targetFov = aspect > 1 ? Math.min(35 + (aspect - 1) * 22, 62) : 35;
+    if (Math.abs(cam.fov - targetFov) > 0.1) {
+      cam.fov = targetFov;
+      cam.updateProjectionMatrix();
+    }
+    if (
+      aspect > 1 &&
+      (mode === "idle" || mode === "monitor" || mode === "dossier" || mode === "corkboard")
+    ) {
       v.dir.copy(v.desiredPos).sub(v.desiredTar).normalize();
       v.desiredPos.addScaledVector(v.dir, (aspect - 1) * 0.9);
     }
