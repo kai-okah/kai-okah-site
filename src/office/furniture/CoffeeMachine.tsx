@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { palette } from "@/office/palette";
 import { useOffice } from "@/office/store";
 import Hotspot, { useHovered } from "@/office/Hotspot";
 import Steam from "@/office/Steam";
+import { woodTexture } from "@/office/lib/textures";
 import { brew, ding } from "@/office/audio/sound";
 
 const BREW_SECONDS = 3;
@@ -18,6 +19,7 @@ export default function CoffeeMachine() {
   const [filled, setFilled] = useState(false);
   const hovered = useHovered("coffee");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wood = useMemo(() => woodTexture("sideboard", palette.wood, "#3f2f1e", [1.5, 1], 2), []);
 
   const startBrew = () => {
     if (useOffice.getState().brewing) return;
@@ -36,7 +38,7 @@ export default function CoffeeMachine() {
       {/* Sideboard it stands on */}
       <mesh position={[0, 0.42, 0]} castShadow receiveShadow>
         <boxGeometry args={[1.1, 0.84, 0.45]} />
-        <meshStandardMaterial color={palette.wood} roughness={0.7} />
+        <meshStandardMaterial map={wood} roughness={0.7} />
       </mesh>
 
       {/* Machine body + head + spout */}

@@ -1,9 +1,11 @@
 "use client";
 
+import { useMemo } from "react";
 import { useOffice } from "@/office/store";
 import { palette } from "@/office/palette";
 import Hotspot from "@/office/Hotspot";
 import { click } from "@/office/audio/sound";
+import { fabricTexture, plasterTexture, woodTexture } from "@/office/lib/textures";
 
 // Room box: x ∈ [-3, 3], z ∈ [-2.5, 2.5], walls 3 m high. The back wall
 // (z = -2.5) holds the window — it's built from four slabs around the
@@ -21,16 +23,27 @@ export default function Room() {
   const lightMode = useOffice((s) => s.lightMode);
   const cycleLight = useOffice((s) => s.cycleLight);
 
+  // Painted once, cached forever (src/office/lib/textures.ts).
+  const tex = useMemo(
+    () => ({
+      floor: woodTexture("floor", palette.floor, "#3a2c1e", [3, 2.5], 8),
+      wall: plasterTexture("wall", palette.wall, [2.5, 1.5]),
+      wallBack: plasterTexture("wallBack", palette.wallBack, [2.5, 1.5]),
+      rug: fabricTexture([3, 3]),
+    }),
+    []
+  );
+
   return (
     <group>
       {/* Floor + rug */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[6, 5]} />
-        <meshStandardMaterial color={palette.floor} roughness={0.85} />
+        <meshStandardMaterial map={tex.floor} bumpMap={tex.floor} bumpScale={2} roughness={0.8} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, -0.7]} receiveShadow>
-        <circleGeometry args={[1.5, 32]} />
-        <meshStandardMaterial color={palette.rug} roughness={1} />
+        <circleGeometry args={[1.5, 48]} />
+        <meshStandardMaterial map={tex.rug} bumpMap={tex.rug} bumpScale={1.5} roughness={1} />
       </mesh>
 
       {/* Ceiling */}
@@ -42,15 +55,15 @@ export default function Room() {
       {/* Side and front walls */}
       <mesh position={[-3, 1.5, 0]} receiveShadow>
         <boxGeometry args={[WALL_T, 3, 5]} />
-        <meshStandardMaterial color={palette.wall} roughness={0.95} />
+        <meshStandardMaterial map={tex.wall} roughness={0.95} />
       </mesh>
       <mesh position={[3, 1.5, 0]} receiveShadow>
         <boxGeometry args={[WALL_T, 3, 5]} />
-        <meshStandardMaterial color={palette.wall} roughness={0.95} />
+        <meshStandardMaterial map={tex.wall} roughness={0.95} />
       </mesh>
       <mesh position={[0, 1.5, 2.5]}>
         <boxGeometry args={[6, 3, WALL_T]} />
-        <meshStandardMaterial color={palette.wall} roughness={0.95} />
+        <meshStandardMaterial map={tex.wall} roughness={0.95} />
       </mesh>
 
       {/* Back wall — four slabs framing the window opening */}
@@ -58,7 +71,7 @@ export default function Room() {
         const { cx, w, sill, h } = WIN;
         const left = cx - w / 2;
         const right = cx + w / 2;
-        const mat = <meshStandardMaterial color={palette.wallBack} roughness={0.95} />;
+        const mat = <meshStandardMaterial map={tex.wallBack} roughness={0.95} />;
         return (
           <group position={[0, 0, -2.5]}>
             <mesh position={[(-3 + left) / 2, 1.5, 0]} receiveShadow>

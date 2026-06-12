@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { palette } from "@/office/palette";
+import { woodTexture } from "@/office/lib/textures";
 
 // A wall shelf with a row of books and a small plant — set dressing.
 // Book sizes/colors are seeded-random but stable across renders.
@@ -30,7 +31,10 @@ export default function Shelf() {
       {/* Board + brackets */}
       <mesh castShadow>
         <boxGeometry args={[1.3, 0.035, 0.24]} />
-        <meshStandardMaterial color={palette.wood} roughness={0.7} />
+        <meshStandardMaterial
+          map={woodTexture("shelf", palette.wood, "#3f2f1e", [1.6, 0.3], 1)}
+          roughness={0.7}
+        />
       </mesh>
       {[-0.5, 0.5].map((x) => (
         <mesh key={x} position={[x, -0.06, -0.08]}>

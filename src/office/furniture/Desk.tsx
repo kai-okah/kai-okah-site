@@ -1,21 +1,24 @@
 "use client";
 
+import { useMemo } from "react";
 import { palette } from "@/office/palette";
 import { useOffice } from "@/office/store";
 import Steam from "@/office/Steam";
+import { woodTexture } from "@/office/lib/textures";
 
 // The desk and its quiet props: lamp, keyboard, mouse, mug (with steam).
 // Interactive things that LIVE on the desk (monitor, dossier, business
 // card) are their own components so each owns its hotspot.
 export default function Desk() {
   const lightMode = useOffice((s) => s.lightMode);
+  const top = useMemo(() => woodTexture("desk", palette.woodLight, "#4a3520", [2, 1], 3), []);
 
   return (
     <group position={[0, 0, -1.75]}>
       {/* Top */}
       <mesh position={[0, 0.93, 0]} castShadow receiveShadow>
         <boxGeometry args={[1.9, 0.05, 0.85]} />
-        <meshStandardMaterial color={palette.woodLight} roughness={0.6} />
+        <meshStandardMaterial map={top} bumpMap={top} bumpScale={1.2} roughness={0.55} />
       </mesh>
       {/* Legs */}
       {(

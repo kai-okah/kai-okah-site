@@ -70,7 +70,13 @@ export default function OfficeApp() {
 
   return (
     <main className="fixed inset-0 overflow-hidden bg-[#0a0908]">
-      <Scene />
+      <div className="office-grade absolute inset-0">
+        <Scene />
+      </div>
+      {/* Film layer: vignette + grain over the render, under the UI —
+          the cheap half of "looks like a movie" (the rest is lighting). */}
+      <div aria-hidden="true" className="film-vignette pointer-events-none absolute inset-0 z-10" />
+      <div aria-hidden="true" className="film-grain pointer-events-none absolute inset-0 z-10" />
       {mode === "entry" && <EntryOverlay />}
       {mode !== "entry" && <Hud />}
       {mode === "dossier" && <DossierOverlay />}

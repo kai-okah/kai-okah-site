@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useOffice } from "@/office/store";
 import { click } from "@/office/audio/sound";
+import { dragState } from "@/office/camera/CameraRig";
 
 type Props = {
   /** Stable id — the owning object reads it back to glow on hover. */
@@ -58,6 +59,7 @@ export default function Hotspot({
       position={position}
       onClick={(e) => {
         e.stopPropagation();
+        if (dragState.moved) return; // end of a look-around drag
         if (!isActive()) return;
         setHover(null, null);
         document.body.style.cursor = "";

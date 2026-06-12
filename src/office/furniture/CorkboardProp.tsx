@@ -1,7 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import { useTexture } from "@react-three/drei";
 import { palette } from "@/office/palette";
+import { corkTexture, paperTexture, woodTexture } from "@/office/lib/textures";
 import { useOffice } from "@/office/store";
 import { pins } from "@/data/corkboard";
 import Hotspot, { useHovered } from "@/office/Hotspot";
@@ -34,6 +36,14 @@ function PinnedPhoto({ image }: { image: string }) {
 export default function CorkboardProp() {
   const focus = useOffice((s) => s.focus);
   const hovered = useHovered("corkboard");
+  const tex = useMemo(
+    () => ({
+      cork: corkTexture([2, 1.4]),
+      paper: paperTexture([1, 1]),
+      frame: woodTexture("boardframe", palette.woodDark, "#2e2114", [2, 0.2], 2),
+    }),
+    []
+  );
 
   return (
     <group position={[-2.94, 1.55, 0.1]} rotation={[0, Math.PI / 2, 0]}>
@@ -41,7 +51,7 @@ export default function CorkboardProp() {
       <mesh castShadow>
         <boxGeometry args={[1.5, 1.0, 0.03]} />
         <meshStandardMaterial
-          color={palette.woodDark}
+          map={tex.frame}
           roughness={0.7}
           emissive={palette.accent}
           emissiveIntensity={hovered ? 0.2 : 0}
@@ -49,7 +59,7 @@ export default function CorkboardProp() {
       </mesh>
       <mesh position={[0, 0, 0.018]}>
         <planeGeometry args={[1.4, 0.9]} />
-        <meshStandardMaterial color={palette.cork} roughness={1} />
+        <meshStandardMaterial map={tex.cork} bumpMap={tex.cork} bumpScale={1.4} roughness={1} />
       </mesh>
 
       {pins.slice(0, SLOTS.length).map((pin, i) => {
@@ -59,7 +69,7 @@ export default function CorkboardProp() {
             {/* Paper (photo or blank reserved note) */}
             <mesh position={[0, -0.01, 0.005]}>
               <planeGeometry args={[0.24, 0.26]} />
-              <meshStandardMaterial color={palette.paper} roughness={0.9} />
+              <meshStandardMaterial map={tex.paper} roughness={0.9} />
             </mesh>
             {pin.image && <PinnedPhoto image={pin.image} />}
             {/* The pin itself — amber, of course */}

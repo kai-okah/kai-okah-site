@@ -7,11 +7,18 @@ import { useOffice, type Mode } from "@/office/store";
 import { flightEase } from "@/office/lib/easing";
 
 // The camera is on rails, reference-style (Henry Heffernan / Jesse Zhou):
-// no free orbit, ever. Each mode is a composed shot; changing mode is a
-// timed flight on a bezier that launches fast and lands soft; between
-// flights the camera is never frozen — it follows the pointer with a
-// gentle parallax and breathes on a slow sine in idle. Visitors with
-// prefers-reduced-motion get hard cuts and a still camera.
+// each mode is a composed shot; changing mode is a timed flight on a
+// bezier that launches fast and lands soft; between flights the camera
+// is never frozen — it follows the pointer with a gentle parallax and
+// breathes on a slow sine in idle. On top of the rails, idle and sitting
+// allow press-and-drag to swing the view around the room (client request
+// 2026-06-12) — clamped so the shot always stays composed and inside the
+// walls. Visitors with prefers-reduced-motion get hard cuts and a still
+// camera (drag still works; it is user-initiated motion).
+
+/** Did the last pointer interaction drag the camera? Scene checks this
+ *  so releasing a drag doesn't count as a "click anywhere" name reveal. */
+export const dragState = { moved: false };
 
 type Pose = { pos: [number, number, number]; tar: [number, number, number] };
 
@@ -31,6 +38,14 @@ const DURATION: Partial<Record<Mode, number>> = {
   dossier: 1.5,
   corkboard: 1.6,
   sitting: 1.5,
+};
+
+// Press-and-drag look-around limits per mode (radians around the pose).
+// This is a first-person head-turn — the camera stays planted and the
+// VIEW swings — so it can never collide with the furniture.
+const ORBIT: Partial<Record<Mode, { yaw: number; pitchUp: number; pitchDown: number }>> = {
+  idle: { yaw: 2.2, pitchUp: 0.45, pitchDown: 0.55 },
+  sitting: { yaw: 2.4, pitchUp: 0.35, pitchDown: 0.4 },
 };
 
 // Pointer parallax amplitude per mode — strong in the room, nearly off
@@ -64,14 +79,81 @@ export default function CameraRig() {
   );
   const flight = useRef<{ to: Mode; start: number; duration: number } | null>(null);
   const reduced = useRef(false);
+  // Drag look-around state: accumulated yaw/pitch around the pose.
+  const orbit = useRef({ yaw: 0, pitch: 0 });
+  const spherical = useMemo(() => new THREE.Spherical(), []);
 
   useEffect(() => {
     reduced.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }, []);
 
-  // A mode change is a flight (or a cut).
+  // Press and hold on the room to swing the view (one finger on touch).
+  useEffect(() => {
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+    const down = (e: PointerEvent) => {
+      const { mode: m, flying } = useOffice.getState();
+      if (!(m in ORBIT) || flying) return;
+      // Drag can start anywhere on the scene — just not on real UI
+      // (drei's invisible HTML portal divs sit over the canvas, so a
+      // "target must be the canvas" check would never match).
+      if (
+        e.target instanceof Element &&
+        e.target.closest("button, a, input, textarea, select, [role='dialog']")
+      ) {
+        return;
+      }
+      dragging = true;
+      dragState.moved = false;
+      lastX = e.clientX;
+      lastY = e.clientY;
+    };
+    const move = (e: PointerEvent) => {
+      if (!dragging) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      if (Math.abs(dx) + Math.abs(dy) > 1) dragState.moved = true;
+      const limits = ORBIT[useOffice.getState().mode];
+      if (!limits) return;
+      orbit.current.yaw = THREE.MathUtils.clamp(
+        orbit.current.yaw - dx * 0.0022,
+        -limits.yaw,
+        limits.yaw
+      );
+      orbit.current.pitch = THREE.MathUtils.clamp(
+        orbit.current.pitch + dy * 0.0018,
+        -limits.pitchDown,
+        limits.pitchUp
+      );
+    };
+    const up = () => {
+      dragging = false;
+      // Let the click that ends this drag be ignored, then reset.
+      setTimeout(() => {
+        dragState.moved = false;
+      }, 0);
+    };
+    window.addEventListener("pointerdown", down);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+    return () => {
+      window.removeEventListener("pointerdown", down);
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+    };
+  }, []);
+
+  // A mode change is a flight (or a cut) — and the look-around resets,
+  // so every destination is the composed shot.
   const firstRun = useRef(true);
   useEffect(() => {
+    orbit.current.yaw = 0;
+    orbit.current.pitch = 0;
     const target = POSES[mode];
     if (firstRun.current || reduced.current) {
       firstRun.current = false;
@@ -101,6 +183,16 @@ export default function CameraRig() {
     if (aspect > 1 && (mode === "monitor" || mode === "dossier" || mode === "corkboard")) {
       v.dir.copy(v.desiredPos).sub(v.desiredTar).normalize();
       v.desiredPos.addScaledVector(v.dir, (aspect - 1) * 0.9);
+    }
+
+    // Apply the drag look-around: turn the head, not the body — rotate
+    // the view direction around the planted camera position.
+    if ((mode === "idle" || mode === "sitting") && (orbit.current.yaw !== 0 || orbit.current.pitch !== 0)) {
+      v.dir.copy(v.desiredTar).sub(v.desiredPos);
+      spherical.setFromVector3(v.dir);
+      spherical.theta += orbit.current.yaw;
+      spherical.phi = THREE.MathUtils.clamp(spherical.phi - orbit.current.pitch, 0.35, 1.85);
+      v.desiredTar.setFromSpherical(spherical).add(v.desiredPos);
     }
 
     const f = flight.current;

@@ -4,9 +4,10 @@ import { Canvas } from "@react-three/fiber";
 import { ContactShadows, Environment, Lightformer, PerformanceMonitor } from "@react-three/drei";
 import { Suspense, useEffect, useRef } from "react";
 import { useOffice } from "@/office/store";
-import CameraRig from "@/office/camera/CameraRig";
+import CameraRig, { dragState } from "@/office/camera/CameraRig";
 import Lights from "@/office/room/Lights";
 import Room from "@/office/room/Room";
+import Door from "@/office/room/Door";
 import WindowRain from "@/office/room/WindowRain";
 import Desk from "@/office/furniture/Desk";
 import MonitorProp from "@/office/furniture/MonitorProp";
@@ -37,6 +38,7 @@ export default function Scene() {
   // V3: a click on nothing in particular, while idle, reveals the name.
   const onPointerMissed = () => {
     const { mode, flying } = useOffice.getState();
+    if (dragState.moved) return; // that was a look-around, not a click
     if (mode === "idle" && !flying) revealName();
   };
 
@@ -66,6 +68,7 @@ export default function Scene() {
           <CameraRig />
           <Lights />
           <Room />
+          <Door />
           <WindowRain />
           <Desk />
           <MonitorProp />

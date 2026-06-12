@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useOffice } from "@/office/store";
 import { pins } from "@/data/corkboard";
 import { click } from "@/office/audio/sound";
@@ -14,6 +14,22 @@ export default function LightboxOverlay() {
   const flying = useOffice((s) => s.flying);
   const [selected, setSelected] = useState<number | null>(null);
   const pin = selected === null ? null : pins[selected];
+  const hasSelection = useRef(false);
+  hasSelection.current = selected !== null;
+
+  // Esc steps back ONE level: photo -> board first, board -> office only
+  // after that. Capture phase so it wins over the HUD's global Esc
+  // (which would otherwise dump the visitor all the way out — the exact
+  // trap from client feedback, 2026-06-12).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || !hasSelection.current) return;
+      e.stopPropagation();
+      setSelected(null);
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, []);
 
   return (
     <div
@@ -22,11 +38,18 @@ export default function LightboxOverlay() {
       }`}
       role="dialog"
       aria-label="Corkboard photo wall"
+      // Clicking the dark backdrop also steps back one level.
+      onClick={(e) => {
+        if (e.target !== e.currentTarget) return;
+        click();
+        if (hasSelection.current) setSelected(null);
+        else back();
+      }}
     >
       {pin ? (
         // Lightbox for one pin
         <div className="w-full max-w-md">
-          <div className="rounded-lg bg-[#f2ede2] p-4 shadow-2xl shadow-black/50">
+          <div className="max-h-[70vh] overflow-y-auto rounded-lg bg-[#f2ede2] p-4 shadow-2xl shadow-black/50">
             {pin.image ? (
               <Image
                 src={pin.image}
