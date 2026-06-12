@@ -28,6 +28,8 @@ type OfficeState = {
   audioOn: boolean;
   /** Hovered hotspot label, shown by the HUD next to the cursor. */
   hoverLabel: string | null;
+  /** Hovered hotspot id — the object glows softly while it's hovered. */
+  hoverId: string | null;
   /** Click-anywhere-while-idle name reveal (V3). */
   nameRevealed: boolean;
   /** Coffee easter egg: true while the machine brews (V10). */
@@ -45,7 +47,7 @@ type OfficeState = {
   back: () => void;
   setFlying: (flying: boolean) => void;
   cycleLight: () => void;
-  setHoverLabel: (label: string | null) => void;
+  setHover: (id: string | null, label: string | null) => void;
   revealName: () => void;
   hideName: () => void;
   setBrewing: (brewing: boolean) => void;
@@ -58,6 +60,7 @@ export const useOffice = create<OfficeState>((set, get) => ({
   lightMode: "day",
   audioOn: false,
   hoverLabel: null,
+  hoverId: null,
   nameRevealed: false,
   brewing: false,
   perfTier: 0,
@@ -66,7 +69,7 @@ export const useOffice = create<OfficeState>((set, get) => ({
   focus: (target) => {
     const { mode, flying } = get();
     if (mode !== "idle" || flying) return;
-    set({ mode: target, hoverLabel: null, nameRevealed: false });
+    set({ mode: target, hoverLabel: null, hoverId: null, nameRevealed: false });
   },
   back: () => {
     const { mode, flying } = get();
@@ -79,7 +82,7 @@ export const useOffice = create<OfficeState>((set, get) => ({
       lightMode:
         LIGHT_MODES[(LIGHT_MODES.indexOf(s.lightMode) + 1) % LIGHT_MODES.length],
     })),
-  setHoverLabel: (hoverLabel) => set({ hoverLabel }),
+  setHover: (hoverId, hoverLabel) => set({ hoverId, hoverLabel }),
   revealName: () => set({ nameRevealed: true }),
   hideName: () => set({ nameRevealed: false }),
   setBrewing: (brewing) => set({ brewing }),

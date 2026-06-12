@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { palette } from "@/office/palette";
 import { useOffice } from "@/office/store";
-import Hotspot from "@/office/Hotspot";
+import Hotspot, { useHovered } from "@/office/Hotspot";
 import Steam from "@/office/Steam";
 import { brew, ding } from "@/office/audio/sound";
 
@@ -16,6 +16,7 @@ export default function CoffeeMachine() {
   const brewing = useOffice((s) => s.brewing);
   const setBrewing = useOffice((s) => s.setBrewing);
   const [filled, setFilled] = useState(false);
+  const hovered = useHovered("coffee");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startBrew = () => {
@@ -42,7 +43,13 @@ export default function CoffeeMachine() {
       <group position={[-0.18, 0.84, 0]}>
         <mesh position={[0, 0.16, -0.06]} castShadow>
           <boxGeometry args={[0.26, 0.32, 0.18]} />
-          <meshStandardMaterial color={palette.metal} roughness={0.35} metalness={0.5} />
+          <meshStandardMaterial
+            color={palette.metal}
+            roughness={0.35}
+            metalness={0.5}
+            emissive={palette.accent}
+            emissiveIntensity={hovered ? 0.25 : 0}
+          />
         </mesh>
         <mesh position={[0, 0.34, 0.04]} castShadow>
           <boxGeometry args={[0.26, 0.1, 0.3]} />
@@ -76,6 +83,7 @@ export default function CoffeeMachine() {
       </group>
 
       <Hotspot
+        id="coffee"
         position={[-0.18, 1.05, 0.05]}
         size={[0.4, 0.55, 0.5]}
         label={brewing ? "Brewing…" : "Coffee machine — needs no explanation"}

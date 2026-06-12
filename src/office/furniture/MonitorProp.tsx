@@ -1,82 +1,73 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
-import * as THREE from "three";
+import { Html } from "@react-three/drei";
 import { palette } from "@/office/palette";
 import { useOffice } from "@/office/store";
-import Hotspot from "@/office/Hotspot";
+import Hotspot, { useHovered } from "@/office/Hotspot";
+import KOos, { SCREEN_PX } from "@/office/overlays/koos/KOos";
 
-// The monitor (V4): a normal screen showing a sleepy KO/OS login. Click
-// it and the camera flies in; the real KO/OS is a DOM overlay that fades
-// in once the flight lands (OfficeApp) — crisp text, real React apps,
-// nothing rendered as 3D texture except this idle screen.
+// The monitor (V4): a normal screen that is ALWAYS running KO/OS — the
+// UI is a live DOM surface composited into the scene (drei <Html
+// transform occlude>, the CSS3DRenderer technique from Henry Heffernan's
+// portfolio). Clicking the monitor flies the camera in; nothing "opens",
+// you just get close enough to a screen that was on the whole time.
+
+const SCREEN_W = 0.76;
+const SCREEN_H = 0.44;
+
 export default function MonitorProp() {
   const focus = useOffice((s) => s.focus);
-  const lightMode = useOffice((s) => s.lightMode);
-  const screenRef = useRef<THREE.MeshStandardMaterial>(null);
-
-  // The idle screen is a once-drawn canvas texture — no font assets.
-  const texture = useMemo(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = 300;
-    const g = canvas.getContext("2d")!;
-    g.fillStyle = palette.screenDark;
-    g.fillRect(0, 0, 512, 300);
-    g.fillStyle = palette.accent;
-    g.font = "600 64px monospace";
-    g.textAlign = "center";
-    g.fillText("KO/OS", 256, 140);
-    g.fillStyle = "#7e8aa0";
-    g.font = "24px monospace";
-    g.fillText("click to log in", 256, 195);
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }, []);
-  useEffect(() => () => texture.dispose(), [texture]);
-
-  // Midnight flicker: the screen breathes a little, like a real panel in
-  // a dark room.
-  useFrame(({ clock }) => {
-    const mat = screenRef.current;
-    if (!mat) return;
-    const base = lightMode === "midnight" ? 1.5 : 1.0;
-    mat.emissiveIntensity =
-      base + Math.sin(clock.elapsedTime * 9) * Math.sin(clock.elapsedTime * 2.3) * 0.06;
-  });
+  const mode = useOffice((s) => s.mode);
+  const hovered = useHovered("monitor");
+  const interactive = mode === "monitor";
 
   return (
     <group position={[0.15, 0, -1.98]}>
       {/* Foot + neck */}
       <mesh position={[0, 0.975, 0]} castShadow>
-        <cylinderGeometry args={[0.1, 0.13, 0.02, 20]} />
-        <meshStandardMaterial color={palette.metal} roughness={0.5} metalness={0.4} />
+        <cylinderGeometry args={[0.1, 0.13, 0.02, 24]} />
+        <meshStandardMaterial color={palette.metal} roughness={0.45} metalness={0.5} />
       </mesh>
       <mesh position={[0, 1.12, -0.02]} castShadow>
-        <boxGeometry args={[0.05, 0.28, 0.03]} />
-        <meshStandardMaterial color={palette.metal} roughness={0.5} metalness={0.4} />
+        <boxGeometry args={[0.05, 0.28, 0.025]} />
+        <meshStandardMaterial color={palette.metal} roughness={0.45} metalness={0.5} />
       </mesh>
-      {/* Panel */}
+      {/* Panel — slim bezel; it glows faintly amber when hovered (the
+          "secretly alive" affordance) */}
       <mesh position={[0, 1.4, 0]} castShadow>
-        <boxGeometry args={[0.82, 0.5, 0.035]} />
-        <meshStandardMaterial color={palette.metal} roughness={0.45} metalness={0.3} />
-      </mesh>
-      {/* Screen */}
-      <mesh position={[0, 1.4, 0.019]}>
-        <planeGeometry args={[0.76, 0.44]} />
+        <boxGeometry args={[SCREEN_W + 0.04, SCREEN_H + 0.04, 0.028]} />
         <meshStandardMaterial
-          ref={screenRef}
-          map={texture}
-          emissive="#ffffff"
-          emissiveMap={texture}
-          emissiveIntensity={1}
-          toneMapped={false}
+          color={palette.metal}
+          roughness={0.4}
+          metalness={0.35}
+          emissive={palette.accent}
+          emissiveIntensity={hovered ? 0.35 : 0}
         />
       </mesh>
+      {/* Dark glass backing behind the DOM surface */}
+      <mesh position={[0, 1.4, 0.0145]}>
+        <planeGeometry args={[SCREEN_W, SCREEN_H]} />
+        <meshStandardMaterial color="#06070a" roughness={0.25} metalness={0.1} />
+      </mesh>
+
+      {/* The live screen. scale maps CSS pixels onto the panel width —
+          drei's transform mode renders 1 css px as (distanceFactor||10)/400
+          world units, hence the ×40. */}
+      <Html
+        transform
+        occlude="blending"
+        position={[0, 1.4, 0.016]}
+        scale={(SCREEN_W / SCREEN_PX.w) * 40}
+        zIndexRange={[10, 0]}
+        // Pointer events pass through to the canvas (so the hotspot can
+        // fly you in) until you've actually arrived at the screen.
+        pointerEvents={interactive ? "auto" : "none"}
+      >
+        <KOos />
+      </Html>
 
       <Hotspot
+        id="monitor"
         position={[0, 1.4, 0.1]}
         size={[0.9, 0.6, 0.25]}
         label="The monitor — log in to KO/OS"

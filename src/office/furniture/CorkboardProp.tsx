@@ -4,7 +4,7 @@ import { useTexture } from "@react-three/drei";
 import { palette } from "@/office/palette";
 import { useOffice } from "@/office/store";
 import { pins } from "@/data/corkboard";
-import Hotspot from "@/office/Hotspot";
+import Hotspot, { useHovered } from "@/office/Hotspot";
 
 // The corkboard on the left wall (V6). Pins with a real image show a
 // little photo; reserved pins are blank notes — visibly waiting, which
@@ -33,13 +33,19 @@ function PinnedPhoto({ image }: { image: string }) {
 
 export default function CorkboardProp() {
   const focus = useOffice((s) => s.focus);
+  const hovered = useHovered("corkboard");
 
   return (
     <group position={[-2.94, 1.55, 0.1]} rotation={[0, Math.PI / 2, 0]}>
       {/* Frame + cork */}
       <mesh castShadow>
         <boxGeometry args={[1.5, 1.0, 0.03]} />
-        <meshStandardMaterial color={palette.woodDark} roughness={0.7} />
+        <meshStandardMaterial
+          color={palette.woodDark}
+          roughness={0.7}
+          emissive={palette.accent}
+          emissiveIntensity={hovered ? 0.2 : 0}
+        />
       </mesh>
       <mesh position={[0, 0, 0.018]}>
         <planeGeometry args={[1.4, 0.9]} />
@@ -66,6 +72,7 @@ export default function CorkboardProp() {
       })}
 
       <Hotspot
+        id="corkboard"
         position={[0, 0, 0.15]}
         size={[1.6, 1.1, 0.3]}
         label="The corkboard — a life, pinned up"

@@ -132,6 +132,7 @@ export default function Room() {
           <meshStandardMaterial color={palette.accent} roughness={0.5} />
         </mesh>
         <Hotspot
+          id="lightswitch"
           position={[-0.05, 0, 0]}
           size={[0.15, 0.3, 0.3]}
           label="Light switch — day / evening / midnight"

@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { useOffice } from "@/office/store";
 import EntryOverlay from "@/office/overlays/EntryOverlay";
 import Hud from "@/office/overlays/Hud";
-import KOos from "@/office/overlays/koos/KOos";
 import DossierOverlay from "@/office/overlays/DossierOverlay";
 import LightboxOverlay from "@/office/overlays/LightboxOverlay";
 
@@ -74,7 +73,6 @@ export default function OfficeApp() {
       <Scene />
       {mode === "entry" && <EntryOverlay />}
       {mode !== "entry" && <Hud />}
-      {mode === "monitor" && <KOos />}
       {mode === "dossier" && <DossierOverlay />}
       {mode === "corkboard" && <LightboxOverlay />}
     </main>

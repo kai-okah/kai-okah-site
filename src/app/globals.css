@@ -111,6 +111,18 @@ body {
   transform: rotateY(-70deg);
 }
 
+/* The monitor's glass: barely-there scanlines over the live KO/OS
+   surface (src/office/overlays/koos/) — sells "screen", costs nothing. */
+.screen-scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.09) 0px,
+    rgba(0, 0, 0, 0.09) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
 @media (prefers-reduced-motion: reduce) {
   .entry-caret::after {
     animation: none;

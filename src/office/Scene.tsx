@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { PerformanceMonitor } from "@react-three/drei";
+import { ContactShadows, Environment, Lightformer, PerformanceMonitor } from "@react-three/drei";
 import { Suspense, useEffect, useRef } from "react";
 import { useOffice } from "@/office/store";
 import CameraRig from "@/office/camera/CameraRig";
@@ -54,7 +54,9 @@ export default function Scene() {
     <Canvas
       shadows={perfTier === 0}
       dpr={perfTier === 0 ? [1, 2] : 1}
-      camera={{ fov: 50, position: [3.2, 2.4, 3.4] }}
+      // FOV 35: the reference-site lens — tighter, less wide-angle
+      // distortion, more photograph (Henry uses exactly 35).
+      camera={{ fov: 35, position: [2.9, 2.35, 3.0] }}
       onPointerMissed={onPointerMissed}
     >
       <color attach="background" args={[FOG[lightMode]]} />
@@ -74,6 +76,24 @@ export default function Scene() {
           <DossierProp />
           <BusinessCard />
           <Plant />
+          {/* Soft ground contact under the furniture — one baked frame,
+              this is most of the difference between "placed" and
+              "floating" */}
+          <ContactShadows
+            position={[0, 0.002, -0.9]}
+            scale={6.5}
+            far={1.6}
+            blur={2.4}
+            opacity={0.42}
+            frames={1}
+          />
+          {/* An offline environment map (no HDRI downloads): a few soft
+              area lights for the reflections on screen, metal and glass */}
+          <Environment resolution={64} frames={1}>
+            <Lightformer intensity={1.6} position={[0, 2.5, -4]} scale={[3, 2, 1]} color="#dfe8f0" />
+            <Lightformer intensity={0.8} position={[3, 2, 2]} scale={[2, 2, 1]} color="#ffe2bd" />
+            <Lightformer intensity={0.4} position={[-3, 1.5, 0]} rotation-y={Math.PI / 2} scale={[2, 1, 1]} color="#cfd8de" />
+          </Environment>
         </Suspense>
       </PerformanceMonitor>
     </Canvas>
