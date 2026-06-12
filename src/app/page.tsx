@@ -1,30 +1,9 @@
-import Nav from "@/components/Nav";
-import Hero from "@/components/Hero";
-import Projects from "@/components/Projects";
-import About from "@/components/About";
-import Contact from "@/components/Contact";
-import Footer from "@/components/Footer";
+import OfficeApp from "@/office/OfficeApp";
 
-// The whole site is this one page: hero → projects → about → contact
-// (BRIEF R13). Each section is its own small component; all words and
-// facts live in src/data/.
+// `/` is v2: the 3D office (BRIEF v2, requirements V1–V12). Everything
+// 3D is client-only and loaded dynamically inside OfficeApp; this page
+// itself stays a trivial server component so static export keeps working.
+// The full v1 one-pager lives on at /plain (V11).
 export default function Home() {
-  return (
-    <>
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-20 focus:rounded-md focus:bg-accent focus:px-3 focus:py-2 focus:text-bg"
-      >
-        Skip to content
-      </a>
-      <Nav />
-      <main id="main">
-        <Hero />
-        <Projects />
-        <About />
-        <Contact />
-      </main>
-      <Footer />
-    </>
-  );
+  return <OfficeApp />;
 }
