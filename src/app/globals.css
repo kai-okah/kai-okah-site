@@ -84,3 +84,41 @@ body {
     transition: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   v2 office overlays (src/office/) — the few effects that need keyframes.
+--------------------------------------------------------------------------- */
+
+/* Blinking caret on the entry typewriter line. */
+.entry-caret::after {
+  content: "▌";
+  margin-left: 2px;
+  color: var(--accent, #f59e0b);
+  animation: entry-blink 0.9s steps(1) infinite;
+}
+@keyframes entry-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Dossier page turn: a quick half-flip that reads as paper. */
+.dossier-page {
+  transform-origin: left center;
+  transition: transform 0.22s ease-in;
+}
+.dossier-page-turning {
+  transform: rotateY(-70deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entry-caret::after {
+    animation: none;
+  }
+  .dossier-page {
+    transition: none;
+  }
+  .dossier-page-turning {
+    transform: none;
+  }
+}
