@@ -11,10 +11,11 @@ import { flightEase } from "@/office/lib/easing";
 // bezier that launches fast and lands soft; between flights the camera
 // is never frozen — it follows the pointer with a gentle parallax and
 // breathes on a slow sine in idle. On top of the rails, idle and sitting
-// allow press-and-drag to swing the view around the room (client request
-// 2026-06-12) — clamped so the shot always stays composed and inside the
-// walls. Visitors with prefers-reduced-motion get hard cuts and a still
-// camera (drag still works; it is user-initiated motion).
+// allow press-and-drag to swing the view (a full 360° in idle — the
+// camera stands mid-room, client request 2026-06-12) and the scroll
+// wheel walks you closer to whatever you're looking at. Visitors with
+// prefers-reduced-motion get hard cuts and a still camera (drag and
+// scroll still work; they are user-initiated motion).
 
 /** Did the last pointer interaction drag the camera? Scene checks this
  *  so releasing a drag doesn't count as a "click anywhere" name reveal. */
@@ -23,8 +24,10 @@ export const dragState = { moved: false };
 type Pose = { pos: [number, number, number]; tar: [number, number, number] };
 
 const POSES: Record<Mode, Pose> = {
-  entry: { pos: [2.9, 2.35, 3.0], tar: [-0.4, 0.9, -1.5] },
-  idle: { pos: [2.1, 1.75, 2.3], tar: [-0.25, 1.0, -1.35] },
+  entry: { pos: [2.4, 2.3, 2.6], tar: [-0.1, 0.95, -1.7] },
+  // Idle stands mid-room so a drag can sweep the entire office in one
+  // continuous 360° turn (desk → shelf → door → corkboard → back).
+  idle: { pos: [0.45, 1.58, 0.95], tar: [0.05, 1.18, -1.85] },
   monitor: { pos: [0.15, 1.41, -1.12], tar: [0.15, 1.4, -1.98] },
   dossier: { pos: [-0.55, 1.72, -1.08], tar: [-0.55, 0.96, -1.62] },
   corkboard: { pos: [-1.6, 1.55, 0.1], tar: [-2.95, 1.55, 0.1] },
@@ -44,8 +47,15 @@ const DURATION: Partial<Record<Mode, number>> = {
 // This is a first-person head-turn — the camera stays planted and the
 // VIEW swings — so it can never collide with the furniture.
 const ORBIT: Partial<Record<Mode, { yaw: number; pitchUp: number; pitchDown: number }>> = {
-  idle: { yaw: 2.2, pitchUp: 0.45, pitchDown: 0.55 },
+  idle: { yaw: Infinity, pitchUp: 0.5, pitchDown: 0.55 }, // full 360°
   sitting: { yaw: 2.4, pitchUp: 0.35, pitchDown: 0.4 },
+};
+
+// Scroll-wheel dolly range (metres along the view direction): how far
+// you can walk toward / back away from what you're looking at.
+const DOLLY: Partial<Record<Mode, { fwd: number; back: number }>> = {
+  idle: { fwd: 2.3, back: 0.9 },
+  sitting: { fwd: 0.5, back: 0.3 },
 };
 
 // Pointer parallax amplitude per mode — strong in the room, nearly off
@@ -81,6 +91,8 @@ export default function CameraRig() {
   const reduced = useRef(false);
   // Drag look-around state: accumulated yaw/pitch around the pose.
   const orbit = useRef({ yaw: 0, pitch: 0 });
+  // Wheel dolly: metres walked along the current view direction.
+  const dolly = useRef(0);
   const spherical = useMemo(() => new THREE.Spherical(), []);
 
   useEffect(() => {
@@ -136,15 +148,35 @@ export default function CameraRig() {
         dragState.moved = false;
       }, 0);
     };
+    // Scroll to move closer / further (client request 2026-06-12).
+    const wheel = (e: WheelEvent) => {
+      const { mode: m, flying } = useOffice.getState();
+      const range = DOLLY[m];
+      if (!range || flying) return;
+      // Overlays and KO/OS scroll their own content — leave them alone.
+      if (
+        e.target instanceof Element &&
+        e.target.closest("[role='dialog'], button, input, textarea, select")
+      ) {
+        return;
+      }
+      dolly.current = THREE.MathUtils.clamp(
+        dolly.current - e.deltaY * 0.0016,
+        -range.back,
+        range.fwd
+      );
+    };
     window.addEventListener("pointerdown", down);
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
     window.addEventListener("pointercancel", up);
+    window.addEventListener("wheel", wheel, { passive: true });
     return () => {
       window.removeEventListener("pointerdown", down);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
+      window.removeEventListener("wheel", wheel);
     };
   }, []);
 
@@ -154,6 +186,7 @@ export default function CameraRig() {
   useEffect(() => {
     orbit.current.yaw = 0;
     orbit.current.pitch = 0;
+    dolly.current = 0;
     const target = POSES[mode];
     if (firstRun.current || reduced.current) {
       firstRun.current = false;
@@ -193,6 +226,15 @@ export default function CameraRig() {
       spherical.theta += orbit.current.yaw;
       spherical.phi = THREE.MathUtils.clamp(spherical.phi - orbit.current.pitch, 0.35, 1.85);
       v.desiredTar.setFromSpherical(spherical).add(v.desiredPos);
+    }
+    // Apply the wheel dolly: step toward what you're looking at (and
+    // never through a wall).
+    if (dolly.current !== 0 && (mode === "idle" || mode === "sitting")) {
+      v.dir.copy(v.desiredTar).sub(v.desiredPos).normalize();
+      v.desiredPos.addScaledVector(v.dir, dolly.current);
+      v.desiredPos.x = THREE.MathUtils.clamp(v.desiredPos.x, -2.7, 2.7);
+      v.desiredPos.y = THREE.MathUtils.clamp(v.desiredPos.y, 0.35, 2.75);
+      v.desiredPos.z = THREE.MathUtils.clamp(v.desiredPos.z, -2.25, 2.3);
     }
 
     const f = flight.current;

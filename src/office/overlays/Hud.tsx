@@ -11,6 +11,12 @@ import { click } from "@/office/audio/sound";
 // v1 carries into the office — contact always one click away.
 export default function Hud() {
   const mode = useOffice((s) => s.mode);
+  // One-time gesture hint, fading out after a few seconds in the room.
+  const [hintGone, setHintGone] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setHintGone(true), 7000);
+    return () => clearTimeout(timer);
+  }, []);
   const flying = useOffice((s) => s.flying);
   const hoverLabel = useOffice((s) => s.hoverLabel);
   const nameRevealed = useOffice((s) => s.nameRevealed);
@@ -64,6 +70,20 @@ export default function Hud() {
           </p>
         </div>
       </div>
+
+      {/* One-time hint: how to move (drag + scroll) */}
+      {mode === "idle" && (
+        <div
+          aria-hidden="true"
+          className={`pointer-events-none fixed inset-x-0 top-5 z-30 flex justify-center transition-opacity duration-1000 ${
+            hintGone ? "opacity-0" : "opacity-100"
+          }`}
+        >
+          <p className="rounded-md bg-black/50 px-4 py-2 font-mono text-xs text-[#9b968a] backdrop-blur">
+            drag to look around · scroll to walk closer · click what interests you
+          </p>
+        </div>
+      )}
 
       {/* Bottom bar: back · light mode · email */}
       <div className="fixed inset-x-0 bottom-0 z-30 flex items-end justify-between p-4">

@@ -1,24 +1,53 @@
-// The corkboard photo wall (V6) — mostly reserved pins at launch, by
-// design: trips, hackathons and milestones fill it in over the years.
-// Adding a photo = dropping it into public/corkboard/ and filling in an
-// entry. Reserved pins render as designed empty slots, not as gaps.
+// The corkboard photo wall (V6) — six slots on the board, each one a
+// COLLECTION of photos (client feedback 2026-06-12: "each photo slot
+// should be able to have a lot of photos"). The pinned thumbnail on the
+// 3D board is the collection's first photo; opening the wall and
+// clicking a slot scrolls through everything in it.
+//
+// Growth path: drop images into public/corkboard/, then add them to a
+// slot's `photos` array — or rearrange which collections own the six
+// pins by reordering this list. Slots with no photos render as designed
+// "reserved" placeholders, not as gaps.
 
-export type Pin = {
-  label: string;
-  /** Path under /public. Omitted = a reserved slot waiting for a photo. */
-  image?: string;
+export type Photo = {
+  /** Path under /public, e.g. "/corkboard/hackathon-01.jpg". */
+  image: string;
   caption?: string;
 };
 
-export const pins: Pin[] = [
+export type Slot = {
+  label: string;
+  /** Shown in the slot header and on reserved (empty) slots. */
+  caption?: string;
+  photos: Photo[];
+};
+
+export const slots: Slot[] = [
   {
     label: "The face behind the office",
-    image: "/photo.jpg",
     caption: "Kai Okah — Atchem-Kezih Kai Ndzoh Okah. Hello.",
+    photos: [
+      {
+        image: "/photo.jpg",
+        caption: "Kai Okah — Atchem-Kezih Kai Ndzoh Okah. Hello.",
+      },
+    ],
   },
-  { label: "First hackathon", caption: "Reserved. It hasn't happened yet — it will." },
-  { label: "UDE Essen", caption: "Reserved for a campus shot." },
-  { label: "First day, first job", caption: "Reserved. Watch this pin." },
-  { label: "Somewhere far away", caption: "Reserved for the first real trip photo." },
-  { label: "?", caption: "Reserved. Some pins earn their photo later." },
+  {
+    label: "First hackathon",
+    caption: "Reserved. It hasn't happened yet — it will.",
+    photos: [],
+  },
+  { label: "UDE Essen", caption: "Reserved for campus shots.", photos: [] },
+  {
+    label: "First day, first job",
+    caption: "Reserved. Watch this pin.",
+    photos: [],
+  },
+  {
+    label: "Somewhere far away",
+    caption: "Reserved for the first real trip photos.",
+    photos: [],
+  },
+  { label: "?", caption: "Reserved. Some pins earn their photos later.", photos: [] },
 ];

@@ -22,6 +22,7 @@ type Capability = "checking" | "ok" | "none";
 // crisp DOM for anything content-bearing).
 export default function OfficeApp() {
   const mode = useOffice((s) => s.mode);
+  const corkboardOpen = useOffice((s) => s.corkboardOpen);
   const [capability, setCapability] = useState<Capability>("checking");
 
   useEffect(() => {
@@ -80,7 +81,7 @@ export default function OfficeApp() {
       {mode === "entry" && <EntryOverlay />}
       {mode !== "entry" && <Hud />}
       {mode === "dossier" && <DossierOverlay />}
-      {mode === "corkboard" && <LightboxOverlay />}
+      {mode === "corkboard" && corkboardOpen && <LightboxOverlay />}
     </main>
   );
 }

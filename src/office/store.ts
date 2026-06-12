@@ -35,6 +35,12 @@ type OfficeState = {
   /** Coffee easter egg: true while the machine brews (V10). */
   brewing: boolean;
   /**
+   * The corkboard is two-stage (client feedback 2026-06-12): first click
+   * flies to the board (mode = "corkboard"), a second click on the board
+   * opens the photo-wall overlay. This is stage two.
+   */
+  corkboardOpen: boolean;
+  /**
    * Performance ladder (risk #1): 0 = everything, 1 = no shadows + DPR 1,
    * 2 = additionally no rain/steam particles. Only ever steps up.
    */
@@ -51,6 +57,7 @@ type OfficeState = {
   revealName: () => void;
   hideName: () => void;
   setBrewing: (brewing: boolean) => void;
+  setCorkboardOpen: (open: boolean) => void;
   degrade: () => void;
 };
 
@@ -63,6 +70,7 @@ export const useOffice = create<OfficeState>((set, get) => ({
   hoverId: null,
   nameRevealed: false,
   brewing: false,
+  corkboardOpen: false,
   perfTier: 0,
 
   enter: () => set({ mode: "idle", audioOn: true }),
@@ -74,7 +82,7 @@ export const useOffice = create<OfficeState>((set, get) => ({
   back: () => {
     const { mode, flying } = get();
     if (mode === "entry" || mode === "idle" || flying) return;
-    set({ mode: "idle" });
+    set({ mode: "idle", corkboardOpen: false });
   },
   setFlying: (flying) => set({ flying }),
   cycleLight: () =>
@@ -86,5 +94,6 @@ export const useOffice = create<OfficeState>((set, get) => ({
   revealName: () => set({ nameRevealed: true }),
   hideName: () => set({ nameRevealed: false }),
   setBrewing: (brewing) => set({ brewing }),
+  setCorkboardOpen: (corkboardOpen) => set({ corkboardOpen }),
   degrade: () => set((s) => ({ perfTier: Math.min(s.perfTier + 1, 2) })),
 }));

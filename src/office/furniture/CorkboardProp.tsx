@@ -5,13 +5,14 @@ import { useTexture } from "@react-three/drei";
 import { palette } from "@/office/palette";
 import { corkTexture, paperTexture, woodTexture } from "@/office/lib/textures";
 import { useOffice } from "@/office/store";
-import { pins } from "@/data/corkboard";
+import { slots } from "@/data/corkboard";
 import Hotspot, { useHovered } from "@/office/Hotspot";
 
-// The corkboard on the left wall (V6). Pins with a real image show a
-// little photo; reserved pins are blank notes — visibly waiting, which
-// is the growth design, not a bug. Clicking the board flies the camera
-// over and opens the DOM lightbox.
+// The corkboard on the left wall (V6). Slots with photos show their
+// first photo pinned; reserved slots are blank notes — visibly waiting,
+// which is the growth design, not a bug. Two-stage (client feedback
+// 2026-06-12): the first click flies the camera to the board, a second
+// click on the board opens the photo wall.
 
 // Stable, slightly irregular pin layout on the board (local x/y).
 const SLOTS: [number, number, number][] = [
@@ -35,7 +36,10 @@ function PinnedPhoto({ image }: { image: string }) {
 
 export default function CorkboardProp() {
   const focus = useOffice((s) => s.focus);
+  const mode = useOffice((s) => s.mode);
+  const setCorkboardOpen = useOffice((s) => s.setCorkboardOpen);
   const hovered = useHovered("corkboard");
+  const atBoard = mode === "corkboard";
   const tex = useMemo(
     () => ({
       cork: corkTexture([2, 1.4]),
@@ -62,16 +66,16 @@ export default function CorkboardProp() {
         <meshStandardMaterial map={tex.cork} bumpMap={tex.cork} bumpScale={1.4} roughness={1} />
       </mesh>
 
-      {pins.slice(0, SLOTS.length).map((pin, i) => {
+      {slots.slice(0, SLOTS.length).map((slot, i) => {
         const [x, y, tilt] = SLOTS[i];
         return (
-          <group key={pin.label} position={[x, y, 0.02]} rotation={[0, 0, tilt]}>
+          <group key={slot.label} position={[x, y, 0.02]} rotation={[0, 0, tilt]}>
             {/* Paper (photo or blank reserved note) */}
             <mesh position={[0, -0.01, 0.005]}>
               <planeGeometry args={[0.24, 0.26]} />
               <meshStandardMaterial map={tex.paper} roughness={0.9} />
             </mesh>
-            {pin.image && <PinnedPhoto image={pin.image} />}
+            {slot.photos[0] && <PinnedPhoto image={slot.photos[0].image} />}
             {/* The pin itself — amber, of course */}
             <mesh position={[0, 0.11, 0.02]}>
               <sphereGeometry args={[0.013, 10, 10]} />
@@ -85,8 +89,13 @@ export default function CorkboardProp() {
         id="corkboard"
         position={[0, 0, 0.15]}
         size={[1.6, 1.1, 0.3]}
-        label="The corkboard — a life, pinned up"
-        onActivate={() => focus("corkboard")}
+        label={atBoard ? "Open the photo wall" : "The corkboard — a life, pinned up"}
+        anyMode
+        onActivate={() => {
+          const m = useOffice.getState().mode;
+          if (m === "idle") focus("corkboard");
+          else if (m === "corkboard") setCorkboardOpen(true);
+        }}
       />
     </group>
   );
